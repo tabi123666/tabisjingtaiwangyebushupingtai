@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabify - 静态网页部署</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #3498db;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .upload-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .upload-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .upload-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .upload-btn:hover {
+            background: #2980b9;
+        }
+        .url-input-section {
+            margin: 20px 0;
+        }
+        .url-input-section label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .submit-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .submit-btn:hover {
+            background: #229954;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f4f8;
+            border-radius: 5px;
+            display: none;
+        }
+        .result h3 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+        .result-url {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3498db;
+            word-break: break-all;
+        }
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-label {
+            background: #3498db;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+            display: inline-block;
+        }
+        .file-label:hover {
+            background: #2980b9;
+        }
+        /* 已选文件列表 */
+        .file-preview {
+            margin: 15px 0 0;
+            text-align: left;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px 16px;
+            display: none;
+        }
+        .file-preview p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+        .file-preview ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .file-preview ul li {
+            font-size: 13px;
+            color: #444;
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .file-preview ul li:last-child { border-bottom: none; }
+        .file-count {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        /* 进度条 */
+        .progress-wrap {
+            display: none;
+            margin-top: 15px;
+        }
+        .progress-bar-bg {
+            background: #e0e0e0;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #3498db;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .progress-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 6px;
+        }
+        /* 成功结果区 */
+        .result {
+            text-align: left;
+        }
+        .result h3 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .result-url-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            background: #fff;
+            border: 1px solid #b2dfdb;
+            border-radius: 6px;
+            padding: 10px 14px;
+        }
+        .result-url {
+            flex: 1;
+            font-size: 15px;
+            font-weight: bold;
+            color: #3498db;
+            word-break: break-all;
+            text-decoration: none;
+        }
+        .result-url:hover { text-decoration: underline; }
+        .copy-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover { background: #2980b9; }
+        .open-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .open-btn:hover { background: #229954; }
+        /* 重新编辑名称 */
+        .edit-name-btn {
+            background: none;
+            border: 1px solid #bbb;
+            color: #666;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .edit-name-btn:hover { border-color: #3498db; color: #3498db; }
+        .rename-wrap {
+            display: none;
+            margin-top: 12px;
+            background: #f4f8ff;
+            border: 1px dashed #90caf9;
+            border-radius: 6px;
+            padding: 14px 16px;
+        }
+        .rename-wrap label {
+            font-size: 13px;
+            color: #555;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .rename-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .rename-input {
+            flex: 1;
+            padding: 7px 10px;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .rename-input:focus { border-color: #3498db; }
+        .rename-confirm-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .rename-confirm-btn:hover { background: #2980b9; }
+        .rename-cancel-btn {
+            background: none;
+            border: 1px solid #ccc;
+            color: #888;
+            padding: 7px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .rename-cancel-btn:hover { border-color: #999; color: #555; }
+        .rename-error { font-size: 12px; color: #e74c3c; margin-top: 5px; }
+        /* 上传文件列表展示 */
+        .uploaded-files {
+            margin-top: 14px;
+        }
+        .uploaded-files p {
+            font-size: 13px;
+            color: #555;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .uploaded-files ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 140px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .uploaded-files ul li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            font-size: 13px;
+            color: #444;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .uploaded-files ul li:last-child { border-bottom: none; }
+        .file-icon { font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tabify - 静态网页部署</h1>
+        <div class="upload-section">
+            <h2>上传您的网页</h2>
+            <div class="upload-buttons">
+                <label class="file-label" for="html-file">上传单个HTML文件</label>
+                <input type="file" id="html-file" accept=".html">
+                <label class="file-label" for="folder">上传文件夹</label>
+                <input type="file" id="folder" webkitdirectory directory multiple>
+            </div>
+
+            <!-- 已选文件预览 -->
+            <div class="file-preview" id="file-preview">
+                <p>📂 已选择的文件：</p>
+                <ul id="file-preview-list"></ul>
+                <div class="file-count" id="file-count"></div>
+            </div>
+            
+            <div class="url-input-section">
+                <label for="url-prefix">自定义URL前缀（仅支持字母和数字）</label>
+                <input type="text" id="url-prefix" class="url-input" placeholder="例如：myproject" pattern="[a-zA-Z0-9]+" title="仅支持字母和数字">
+                <p class="error" id="url-error"></p>
+            </div>
+            
+            <button class="submit-btn" id="deploy-btn">生成网页链接</button>
+
+            <!-- 进度条 -->
+            <div class="progress-wrap" id="progress-wrap">
+                <div class="progress-bar-bg"><div class="progress-bar" id="progress-bar"></div></div>
+                <div class="progress-text" id="progress-text">上传中...</div>
+            </div>
+        </div>
+
+        <div class="result" id="result" style="background:white;border-radius:10px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-bottom:30px;display:none;">
+            <h3>✅ 部署成功！</h3>
+            <p style="margin-top:8px;font-size:14px;color:#666;">您的网页已成功部署，可通过以下地址访问：</p>
+            <div class="result-url-wrap">
+                <a class="result-url" id="result-url" target="_blank" href="#"></a>
+                <button class="copy-btn" id="copy-btn">复制</button>
+                <a class="open-btn" id="open-btn" target="_blank" href="#">打开</a>
+                <button class="edit-name-btn" id="edit-name-btn">✏️ 编辑名称</button>
+            </div>
+            <!-- 重新编辑名称 -->
+            <div class="rename-wrap" id="rename-wrap">
+                <label>修改网址名称（仅字母和数字）</label>
+                <div class="rename-row">
+                    <input class="rename-input" id="rename-input" type="text" placeholder="输入新的名称">
+                    <button class="rename-confirm-btn" id="rename-confirm-btn">确认更新</button>
+                    <button class="rename-cancel-btn" id="rename-cancel-btn">取消</button>
+                </div>
+                <div class="rename-error" id="rename-error"></div>
+            </div>
+            <!-- 上传文件列表 -->
+            <div class="uploaded-files" id="uploaded-files">
+                <p>📄 已上传的文件：</p>
+                <ul id="uploaded-file-list"></ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const htmlFileInput   = document.getElementById('html-file');
+        const folderInput     = document.getElementById('folder');
+        const filePreview     = document.getElementById('file-preview');
+        const filePreviewList = document.getElementById('file-preview-list');
+        const fileCount       = document.getElementById('file-count');
+        const deployBtn       = document.getElementById('deploy-btn');
+        const progressWrap    = document.getElementById('progress-wrap');
+        const progressBar     = document.getElementById('progress-bar');
+        const progressText    = document.getElementById('progress-text');
+        const result          = document.getElementById('result');
+        const resultUrl       = document.getElementById('result-url');
+        const openBtn         = document.getElementById('open-btn');
+        const copyBtn         = document.getElementById('copy-btn');
+        const uploadedList    = document.getElementById('uploaded-file-list');
+        const editNameBtn     = document.getElementById('edit-name-btn');
+        const renameWrap      = document.getElementById('rename-wrap');
+        const renameInput     = document.getElementById('rename-input');
+        const renameConfirmBtn= document.getElementById('rename-confirm-btn');
+        const renameCancelBtn = document.getElementById('rename-cancel-btn');
+        const renameError     = document.getElementById('rename-error');
+
+        let currentFiles = []; // 保留最近一次上传的文件
+
+        // 文件图标映射
+        function fileIcon(name) {
+            if (name.endsWith('.html')) return '🌐';
+            if (name.endsWith('.css'))  return '🎨';
+            if (name.endsWith('.js'))   return '⚙️';
+            if (/\.(png|jpg|jpeg|gif|svg|webp)$/i.test(name)) return '🖼️';
+            return '📄';
+        }
+
+        // 显示已选文件预览
+        function showPreview(files) {
+            if (!files || files.length === 0) { filePreview.style.display = 'none'; return; }
+            filePreviewList.innerHTML = '';
+            const max = Math.min(files.length, 10);
+            for (let i = 0; i < max; i++) {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="file-icon">${fileIcon(files[i].name)}</span>${files[i].name}`;
+                filePreviewList.appendChild(li);
+            }
+            fileCount.textContent = files.length > 10 ? `...共 ${files.length} 个文件` : `共 ${files.length} 个文件`;
+            filePreview.style.display = 'block';
+        }
+
+        htmlFileInput.addEventListener('change', () => {
+            if (htmlFileInput.files.length) { folderInput.value = ''; showPreview(htmlFileInput.files); }
+        });
+        folderInput.addEventListener('change', () => {
+            if (folderInput.files.length) { htmlFileInput.value = ''; showPreview(folderInput.files); }
+        });
+
+        // 复制链接
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(resultUrl.href).then(() => {
+                copyBtn.textContent = '已复制✓';
+                setTimeout(() => copyBtn.textContent = '复制', 2000);
+            });
+        });
+
+        // 展开/收起 重新编辑名称
+        editNameBtn.addEventListener('click', () => {
+            const isOpen = renameWrap.style.display === 'block';
+            renameWrap.style.display = isOpen ? 'none' : 'block';
+            editNameBtn.textContent  = isOpen ? '✏️ 编辑名称' : '收起';
+            if (!isOpen) {
+                // 预填当前名称
+                const match = resultUrl.href.match(/\/uploads\/([^/]+)\//);
+                renameInput.value = match ? match[1] : '';
+                renameError.textContent = '';
+                renameInput.focus();
+            }
+        });
+
+        renameCancelBtn.addEventListener('click', () => {
+            renameWrap.style.display = 'none';
+            editNameBtn.textContent  = '✏️ 编辑名称';
+        });
+
+        renameConfirmBtn.addEventListener('click', () => {
+            const newPrefix = renameInput.value.trim();
+            if (!newPrefix) { renameError.textContent = '请输入名称'; return; }
+            if (!/^[a-zA-Z0-9]+$/.test(newPrefix)) { renameError.textContent = '仅支持字母和数字'; return; }
+            if (currentFiles.length === 0) { renameError.textContent = '找不到原文件，请重新上传'; return; }
+            renameError.textContent = '';
+            renameConfirmBtn.disabled = true;
+            renameConfirmBtn.textContent = '更新中...';
+            doUpload(currentFiles, newPrefix, () => {
+                renameWrap.style.display = 'none';
+                editNameBtn.textContent  = '✏️ 编辑名称';
+                renameConfirmBtn.disabled = false;
+                renameConfirmBtn.textContent = '确认更新';
+            });
+        });
+
+        // 通用上传函数
+        function doUpload(files, urlPrefix, onDone) {
+            const formData = new FormData();
+            formData.append('urlPrefix', urlPrefix);
+            files.forEach(f => formData.append('files', f));
+
+            deployBtn.disabled    = true;
+            progressWrap.style.display = 'block';
+            progressBar.style.width    = '0%';
+            progressText.textContent   = '上传中...';
+            result.style.display       = 'none';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload');
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round(e.loaded / e.total * 100);
+                    progressBar.style.width  = pct + '%';
+                    progressText.textContent = `上传中... ${pct}%`;
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                deployBtn.disabled = false;
+                progressWrap.style.display = 'none';
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.success) {
+                        resultUrl.textContent = data.url;
+                        resultUrl.href = data.url;
+                        openBtn.href   = data.url;
+
+                        uploadedList.innerHTML = '';
+                        files.forEach(f => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<span class="file-icon">${fileIcon(f.name)}</span>${f.name}`;
+                            uploadedList.appendChild(li);
+                        });
+
+                        result.style.display = 'block';
+                        result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        if (onDone) onDone();
+                    } else {
+                        alert('生成失败: ' + data.error);
+                        if (onDone) onDone();
+                    }
+                } catch {
+                    alert('响应解析失败，请重试');
+                    if (onDone) onDone();
+                }
+            });
+
+            xhr.addEventListener('error', () => {
+                deployBtn.disabled = false;
+                progressWrap.style.display = 'none';
+                alert('上传失败，请检查网络后重试');
+                if (onDone) onDone();
+            });
+
+            xhr.send(formData);
+        }
+
+        // 主按钮点击
+        deployBtn.addEventListener('click', function () {
+            const htmlFile  = htmlFileInput.files[0];
+            const folder    = folderInput.files;
+            const urlPrefix = document.getElementById('url-prefix').value;
+            const urlError  = document.getElementById('url-error');
+
+            if (!urlPrefix) { urlError.textContent = '请输入URL前缀'; return; }
+            if (!/^[a-zA-Z0-9]+$/.test(urlPrefix)) { urlError.textContent = 'URL前缀只能包含字母和数字'; return; }
+            urlError.textContent = '';
+
+            if (!htmlFile && folder.length === 0) { alert('请上传文件或文件夹'); return; }
+
+            currentFiles = htmlFile ? [htmlFile] : Array.from(folder);
+            doUpload(currentFiles, urlPrefix);
+        });
+    </script>
+</body>
+</html>
